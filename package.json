@@ -3,6 +3,9 @@
   "description": "externalize include directive",
   "version": "0.0.0",
   "author": "sasa+1 <sasaplus1@gmail.com>",
+  "dependencies": {
+    "freemarker-parser": "^1.1.6"
+  },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.4.1",
     "@typescript-eslint/parser": "^4.4.1",
