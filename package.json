@@ -25,6 +25,7 @@
     "url": "https://github.com/sasaplus1/fmpp-externalizer.git"
   },
   "scripts": {
+    "build": "tsc",
     "fix": "run-s fix:eslint fix:prettier",
     "fix:eslint": "eslint --ext .ts --fix .",
     "fix:prettier": "prettier --write --parser typescript '*.ts'",
@@ -32,7 +33,6 @@
     "lint": "run-s lint:eslint lint:prettier",
     "lint:eslint": "eslint --cache --ext .ts .",
     "lint:prettier": "prettier --check --parser typescript '*.ts'",
-    "watch": "run-p -l watch:*",
-    "watch:ts": "tsc --watch"
+    "watch": "tsc --watch"
   }
 }
