@@ -1,7 +1,7 @@
 {
   "name": "fmpp-externalizer",
   "description": "externalize include directive",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "author": "sasa+1 <sasaplus1@gmail.com>",
   "bin": "./bin/fmpp-externalizer",
   "dependencies": {
