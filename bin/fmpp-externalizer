@@ -1,0 +1,147 @@
+#!/usr/bin/env node
+
+const fs = require('fs');
+const path = require('path');
+
+const { program } = require('commander');
+const { cosmiconfigSync } = require('cosmiconfig');
+const debug = require('debug');
+const glob = require('glob');
+const isGlob = require('is-glob');
+
+const { externalize } = require('../');
+
+const meta = require('../package');
+
+const log = debug('fmpp-externalizer');
+
+const explorerSync = cosmiconfigSync(meta.name, {
+  searchPlaces: [
+    '.fmppexternalizerrc.js',
+    '.fmppexternalizerrc.yaml',
+    '.fmppexternalizerrc.yml',
+    '.fmppexternalizerrc.json',
+    'fmpp-externalizer.config.js',
+    'package.json'
+  ]
+});
+const rcConfigs = explorerSync.search();
+
+program
+  .description('externalize include directive')
+  .option('-d, --dir <dir>', 'output directory')
+  .option('-m, --match <pattern>', 'match pattern')
+  .option('-o, --output <file>', 'output file')
+  .option('-q, --quotation <quote>', 'output quotation', 'double')
+  .option('-t, --to <text>', 'replace text')
+  .version(meta.version, '-v, --version');
+
+program.on('--help', function () {
+  console.log('');
+  console.log('Usage:');
+  console.log('  $ fmpp-externalizer file                  Output to stdout');
+  console.log('  $ fmpp-externalizer file -o out           Output to file');
+  console.log('  $ fmpp-externalizer src/**/*.ftl -d dir   Glob pattern');
+});
+
+program.parse(process.argv);
+
+const arg = program.args[0];
+
+if (typeof arg !== 'string') {
+  process.exitCode = 1;
+
+  console.log('file not found');
+  console.log('');
+
+  program.help();
+
+  throw new Error('arg not found');
+}
+
+const { config } = rcConfigs || {};
+const { freemarkerParserOptions, ...options } = config;
+
+if (program.match) {
+  const { match } = program;
+
+  // TODO: /path/to/file/ => RegExp!
+  if (/^\/.*\/[gimsyu]*$/.test(match)) {
+    const lastSlashIndex = match.lastIndexOf('/');
+    const source = match.slice(1, lastSlashIndex);
+    const flags = match.slice(lastSlashIndex + 1);
+
+    options.match = new RegExp(source, flags);
+  } else {
+    options.match = match;
+  }
+}
+if (program.quotation) {
+  switch (program.quotation) {
+    case 'single':
+      options.quotation = "'";
+      break;
+    case 'double':
+      options.quotation = '"';
+      break;
+    default:
+      options.quotation = '"';
+  }
+}
+if (program.to) {
+  options.to = program.to;
+}
+
+const isGlobArg = isGlob(arg);
+
+log('program.opts: %O', program.opts());
+log('program.args: %O', program.args);
+log('options: %O', options);
+log('freemarkerParserOptions: %O', freemarkerParserOptions);
+log('isGlobArg: %O', isGlobArg);
+
+if (isGlobArg && !program.dir) {
+  process.exitCode = 1;
+
+  console.log('must need to use --dir option when use glob');
+  console.log('');
+
+  program.help();
+
+  throw new Error('dir not found');
+}
+
+if (isGlobArg) {
+  const filePaths = glob.sync(arg);
+
+  log('filePaths: %O', filePaths);
+
+  for (const filePath of filePaths) {
+    const template = fs.readFileSync(filePath, 'utf8');
+    const content = externalize(template, options, freemarkerParserOptions);
+
+    const pathParts = filePath.split('/');
+
+    log('pathParts: %O', pathParts);
+
+    // TODO: more simplify
+    const outputPath =
+      pathParts[0] === '' || /^\.{1,2}$/.test(pathParts[0])
+        ? path.join(pathParts[0], program.dir, pathParts.slice(2).join('/'))
+        : path.join(program.dir, pathParts.slice(1).join('/'));
+
+    log('outputPath: %O', outputPath);
+
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    fs.writeFileSync(outputPath, content, 'utf8');
+  }
+} else {
+  const template = fs.readFileSync(arg, 'utf8');
+  const content = externalize(template, options, freemarkerParserOptions);
+
+  if (program.output) {
+    fs.writeFileSync(program.output, content, 'utf8');
+  } else {
+    process.stdout.write(content);
+  }
+}

@@ -3,8 +3,14 @@
   "description": "externalize include directive",
   "version": "0.0.0",
   "author": "sasa+1 <sasaplus1@gmail.com>",
+  "bin": "./bin/fmpp-externalizer",
   "dependencies": {
-    "freemarker-parser": "^1.1.6"
+    "commander": "^6.1.0",
+    "cosmiconfig": "^7.0.0",
+    "debug": "^4.2.0",
+    "freemarker-parser": "^1.1.6",
+    "glob": "^7.1.6",
+    "is-glob": "^4.0.1"
   },
   "devDependencies": {
     "@types/mocha": "^8.0.3",
