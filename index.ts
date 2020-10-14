@@ -53,7 +53,7 @@ export function externalize(
         } else if (typeof match === 'function') {
           tokenText += ` ${quotation + match(includePath) + quotation} `;
         } else {
-          tokenText += params;
+          tokenText += ` ${params}`;
         }
       } else {
         tokenText += params;

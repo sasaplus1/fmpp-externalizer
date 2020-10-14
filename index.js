@@ -41,7 +41,7 @@ function externalize(template, options, freemarkerParserOptions) {
                     tokenText += " " + (quotation + match(includePath) + quotation) + " ";
                 }
                 else {
-                    tokenText += params;
+                    tokenText += " " + params;
                 }
             }
             else {
