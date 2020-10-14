@@ -29,27 +29,38 @@ function externalize(template, options, freemarkerParserOptions) {
             //   params: '"/path/to/file" encoding="utf-8" parse=false ',
             //   isClose: false
             // }
-            if (type === 'Directive' && /include/i.test(text)) {
-                var includePath = params.replace(/["']+/g, '').trim();
-                if (typeof match === 'string' && match === includePath) {
-                    tokenText += " " + (quotation + to + quotation) + " ";
-                }
-                else if (match instanceof RegExp && match.test(includePath)) {
-                    tokenText += " " + (quotation + to + quotation) + " ";
-                }
-                else if (typeof match === 'function') {
-                    tokenText += " " + (quotation + match(includePath) + quotation) + " ";
+            if (type === 'Directive') {
+                if (/include/i.test(text)) {
+                    var includePath = params.replace(/["']+/g, '').trim();
+                    if (typeof match === 'string' && match === includePath) {
+                        tokenText += " " + (quotation + to + quotation) + " ";
+                    }
+                    else if (match instanceof RegExp && match.test(includePath)) {
+                        tokenText += " " + (quotation + to + quotation) + " ";
+                    }
+                    else if (typeof match === 'function') {
+                        tokenText += " " + (quotation + match(includePath) + quotation) + " ";
+                    }
+                    else if (params) {
+                        tokenText += " " + params;
+                    }
+                    else {
+                        tokenText += " " + params;
+                    }
                 }
                 else {
                     tokenText += " " + params;
                 }
+            }
+            else if (type === 'Macro') {
+                tokenText += " " + params;
             }
             else {
                 tokenText += params;
             }
         }
         if (endTag) {
-            tokenText += token.endTag;
+            tokenText += type === 'Macro' && !params ? " " + endTag : endTag;
         }
         return tokenText;
     });
