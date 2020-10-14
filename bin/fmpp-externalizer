@@ -34,6 +34,7 @@ program
   .option('-o, --output <file>', 'output file')
   .option('-q, --quotation <quote>', 'output quotation', 'double')
   .option('-t, --to <text>', 'replace text')
+  .option('--write', 'overwrite file', false)
   .version(meta.version, '-v, --version');
 
 program.on('--help', function () {
@@ -100,7 +101,7 @@ log('options: %O', options);
 log('freemarkerParserOptions: %O', freemarkerParserOptions);
 log('isGlobArg: %O', isGlobArg);
 
-if (isGlobArg && !program.dir) {
+if (isGlobArg && !program.dir && !program.write) {
   process.exitCode = 1;
 
   console.log('must need to use --dir option when use glob');
@@ -120,26 +121,31 @@ if (isGlobArg) {
     const template = fs.readFileSync(filePath, 'utf8');
     const content = externalize(template, options, freemarkerParserOptions);
 
-    const pathParts = filePath.split('/');
+    if (program.write) {
+      fs.writeFileSync(filePath, content, 'utf8');
+    } else {
+      const pathParts = filePath.split('/');
 
-    log('pathParts: %O', pathParts);
+      log('pathParts: %O', pathParts);
 
-    // TODO: more simplify
-    const outputPath =
-      pathParts[0] === '' || /^\.{1,2}$/.test(pathParts[0])
-        ? path.join(pathParts[0], program.dir, pathParts.slice(2).join('/'))
-        : path.join(program.dir, pathParts.slice(1).join('/'));
+      // TODO: more simplify
+      const outputPath =
+        pathParts[0] === '' || /^\.{1,2}$/.test(pathParts[0])
+          ? path.join(pathParts[0], program.dir, pathParts.slice(2).join('/'))
+          : path.join(program.dir, pathParts.slice(1).join('/'));
 
-    log('outputPath: %O', outputPath);
+      log('outputPath: %O', outputPath);
 
-    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-    fs.writeFileSync(outputPath, content, 'utf8');
+      fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+      fs.writeFileSync(outputPath, content, 'utf8');
+    }
   }
 } else {
   const template = fs.readFileSync(arg, 'utf8');
   const content = externalize(template, options, freemarkerParserOptions);
 
   if (program.output) {
+    // TODO: --write
     fs.writeFileSync(program.output, content, 'utf8');
   } else {
     process.stdout.write(content);
